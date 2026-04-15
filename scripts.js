@@ -1,0 +1,85 @@
+let chart;
+
+  function formatarMoeda(input) {
+    let valor = input.value.replace(/\D/g, '');
+    valor = (valor / 100).toFixed(2) + '';
+    valor = valor.replace('.', ',');
+    valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+    input.value = 'R$ ' + valor;
+  }
+
+  function parseValor(valor) {
+    return parseFloat(valor.replace(/\D/g, '')) / 100 || 0;
+  }
+
+  function gerarGrafico() {
+    const salario = parseValor(document.getElementById('salario').value);
+    const fixos = parseValor(document.getElementById('fixos').value);
+    const variaveis = parseValor(document.getElementById('variaveis').value);
+
+    const totalGastos = fixos + variaveis;
+    const sobra = Math.max(salario - totalGastos, 0);
+
+    const sugestaoIdeal = salario * 0.2;
+    const sugestaoInvest = Math.min(sugestaoIdeal, sobra);
+
+    const comprometido = salario ? ((totalGastos / salario) * 100).toFixed(0) : 0;
+
+    let cor = '#34d399';
+    if (comprometido > 90) cor = '#f87171';
+    else if (comprometido > 80) cor = '#fbbf24';
+
+    document.getElementById('centerText').innerHTML = `<span>Comprometido:</span><strong style="color: ${cor}"> ${comprometido}%</strong>`;
+
+    document.getElementById('sugestao').innerHTML = `
+      <div class="suggestion">
+        💡 Sugestão de investimento: <strong>R$ ${sugestaoInvest.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong><br>
+        <span style="font-size:12px;color:#9ca3af">(Base: 20% da renda ou sua sobra disponível)</span>
+      </div>
+    `;
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(document.getElementById('grafico'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Fixos', 'Variáveis', 'Sobra'],
+        datasets: [{
+          data: [0, 0, 0],
+          backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'],
+          borderWidth: 0,
+          hoverOffset: 14,
+          spacing: 2
+        }]
+      },
+      options: {
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
+        animation: {
+          duration: 1000,
+          easing: 'easeOutCubic'
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#e5e7eb' }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let value = context.raw || 0;
+                return `${context.label}: R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+              }
+            }
+          }
+        },
+        cutout: '70%'
+      }
+    });
+
+    setTimeout(() => {
+      chart.data.datasets[0].data = [fixos, variaveis, sobra];
+      chart.update();
+    }, 50);
+  }
