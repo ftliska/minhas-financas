@@ -63,7 +63,10 @@ let chart;
         plugins: {
           legend: {
             position: 'bottom',
-            labels: { color: '#e5e7eb' }
+            labels: { color: '#e5e7eb',
+                     padding: 25,
+                     boxWidth: 12
+                    }
           },
           tooltip: {
             callbacks: {
