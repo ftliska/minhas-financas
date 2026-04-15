@@ -48,21 +48,21 @@ body {
     }
 
     input {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      background: #2a2f3a;
-      color: #fff;
-      font-size: 14px;
-      transition: 0.2s;
-    }
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: #2a2f3a;
+  color: #fff;
+  font-size: 14px;
+  transition: 0.2s;
+}
 
-    input:focus {
-      outline: none;
-      background: #323847;
-      box-shadow: 0 0 0 1px #6366f1;
-    }
+input:focus {
+  outline: none;
+  background: #323847;
+  border-color: #6366f1;
+}
 
     button {
       width: 100%;
