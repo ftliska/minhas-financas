@@ -189,8 +189,8 @@
     const comprometido = salario ? ((totalGastos / salario) * 100).toFixed(0) : 0;
 
     let cor = '#34d399';
-    if (comprometido > 80) cor = '#f87171';
-    else if (comprometido > 60) cor = '#fbbf24';
+    if (comprometido > 90) cor = '#f87171';
+    else if (comprometido > 80) cor = '#fbbf24';
 
     document.getElementById('centerText').innerHTML = `<span>Comprometido:</span><strong style="color: ${cor}"> ${comprometido}%</strong>`;
 
