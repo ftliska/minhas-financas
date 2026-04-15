@@ -21,6 +21,39 @@ function parseValor(valor) {
   return parseFloat(valor.replace(/\D/g, '')) / 100 || 0;
 }
 
+function validarCampos() {
+  const salarioInput = document.getElementById('salario');
+  const fixosInput = document.getElementById('fixos');
+
+  let valido = true;
+
+  // limpa erros anteriores
+  document.querySelectorAll('.error-message').forEach(e => e.remove());
+  document.querySelectorAll('.input-error').forEach(e => e.classList.remove('input-error'));
+
+  function mostrarErro(input, mensagem) {
+    input.classList.add('input-error');
+
+    const erro = document.createElement('div');
+    erro.className = 'error-message';
+    erro.textContent = mensagem;
+
+    input.parentNode.appendChild(erro);
+  }
+
+  if (!salarioInput.value) {
+    mostrarErro(salarioInput, 'Informe seu salário');
+    valido = false;
+  }
+
+  if (!fixosInput.value) {
+    mostrarErro(fixosInput, 'Informe seus gastos fixos');
+    valido = false;
+  }
+
+  return valido;
+}
+
 // ===== UI Components =====
 function criarCenterText(comprometido, cor) {
   const container = document.getElementById('centerText');
@@ -118,6 +151,7 @@ function criarGrafico() {
 
 // ===== Main =====
 function gerarGrafico() {
+  if (!validarCampos()) return;
   const salario = parseValor(document.getElementById('salario').value);
   const fixos = parseValor(document.getElementById('fixos').value);
   const variaveis = parseValor(document.getElementById('variaveis').value);
@@ -146,3 +180,11 @@ function gerarGrafico() {
   chart.data.datasets[0].data = [fixos, variaveis, sobra];
   chart.update();
 }
+
+document.querySelectorAll('input').forEach(input => {
+  input.addEventListener('input', () => {
+    input.classList.remove('input-error');
+    const erro = input.parentNode.querySelector('.error-message');
+    if (erro) erro.remove();
+  });
+});
