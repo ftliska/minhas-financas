@@ -79,7 +79,7 @@ body {
 
     .chart-container {
       position: relative;
-      margin-top: 35px; /* mais espaço acima do gráfico */
+      margin-top: 35px;
     }
 
     canvas {
@@ -109,7 +109,7 @@ body {
     }
 
     .suggestion {
-      margin-top: 25px; /* mais espaço abaixo do gráfico */
+      margin-top: 25px;
       padding: 12px;
       border-radius: 10px;
       font-size: 13px;
@@ -118,3 +118,8 @@ body {
       text-align: center;
       animation: fadeIn 0.5s ease;
     }
+
+.suggestion-desc {
+  font-size: 12px;
+  color: #9ca3af;
+}
