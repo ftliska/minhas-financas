@@ -1,88 +1,148 @@
 let chart;
 
-  function formatarMoeda(input) {
-    let valor = input.value.replace(/\D/g, '');
-    valor = (valor / 100).toFixed(2) + '';
-    valor = valor.replace('.', ',');
-    valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-    input.value = 'R$ ' + valor;
+// ===== Utils =====
+function formatarMoeda(input) {
+  let valor = input.value.replace(/\D/g, '');
+
+  if (!valor) {
+    input.value = '';
+    return;
   }
 
-  function parseValor(valor) {
-    return parseFloat(valor.replace(/\D/g, '')) / 100 || 0;
-  }
+  valor = parseInt(valor, 10) / 100;
 
-  function gerarGrafico() {
-    const salario = parseValor(document.getElementById('salario').value);
-    const fixos = parseValor(document.getElementById('fixos').value);
-    const variaveis = parseValor(document.getElementById('variaveis').value);
+  input.value = valor.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+}
 
-    const totalGastos = fixos + variaveis;
-    const sobra = Math.max(salario - totalGastos, 0);
+function parseValor(valor) {
+  return parseFloat(valor.replace(/\D/g, '')) / 100 || 0;
+}
 
-    const sugestaoIdeal = salario * 0.2;
-    const sugestaoInvest = Math.min(sugestaoIdeal, sobra);
+// ===== UI Components =====
+function criarCenterText(comprometido, cor) {
+  const container = document.getElementById('centerText');
+  container.replaceChildren(); // mais moderno que innerHTML = ''
 
-    const comprometido = salario ? ((totalGastos / salario) * 100).toFixed(0) : 0;
+  const label = document.createElement('span');
+  label.textContent = 'Comprometido:';
 
-    let cor = '#34d399';
-    if (comprometido > 90) cor = '#f87171';
-    else if (comprometido > 80) cor = '#fbbf24';
+  const value = document.createElement('strong');
+  value.textContent = ` ${comprometido}%`;
+  value.style.color = cor;
 
-    document.getElementById('centerText').innerHTML = `<span>Comprometido:</span><strong style="color: ${cor}"> ${comprometido}%</strong>`;
+  container.append(label, value);
+}
 
-    document.getElementById('sugestao').innerHTML = `
-      <div class="suggestion">
-        💡 Sugestão de investimento: <strong>R$ ${sugestaoInvest.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong><br>
-        <span style="font-size:12px;color:#9ca3af">(Base: 20% da renda ou sua sobra disponível)</span>
-      </div>
-    `;
+function criarSugestao(valorInvest) {
+  const container = document.getElementById('sugestao');
+  container.replaceChildren();
 
-    if (chart) chart.destroy();
+  const box = document.createElement('div');
+  box.className = 'suggestion';
 
-    chart = new Chart(document.getElementById('grafico'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Fixos', 'Variáveis', 'Sobra'],
-        datasets: [{
-          data: [0, 0, 0],
-          backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'],
-          borderWidth: 0,
-          hoverOffset: 14,
-          spacing: 2
-        }]
+  const linha = document.createElement('div');
+  linha.textContent = '💡 Sugestão de investimento: ';
+
+  const valor = document.createElement('strong');
+  valor.textContent = valorInvest.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+
+  linha.appendChild(valor);
+
+  const desc = document.createElement('div');
+  desc.textContent = '(Base: 20% da renda ou sua sobra disponível)';
+  desc.className = 'suggestion-desc'; // melhor que style inline
+
+  box.append(linha, desc);
+  container.appendChild(box);
+}
+
+// ===== Chart =====
+function criarGrafico() {
+  return new Chart(document.getElementById('grafico'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Fixos', 'Variáveis', 'Sobra'],
+      datasets: [{
+        data: [0, 0, 0],
+        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'],
+        borderWidth: 0,
+        hoverOffset: 14,
+        spacing: 2
+      }]
+    },
+    options: {
+      onHover: (event, elements) => {
+        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
       },
-      options: {
-        onHover: (event, elements) => {
-          event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
-        },
-        animation: {
-          duration: 1000,
-          easing: 'easeOutCubic'
-        },
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { color: '#e5e7eb',
-                     padding: 25,
-                     boxWidth: 12
-                    }
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                let value = context.raw || 0;
-                return `${context.label}: R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-              }
-            }
+      animation: {
+        duration: 1000,
+        easing: 'easeOutCubic'
+      },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#e5e7eb',
+            padding: 25,
+            boxWidth: 12
           }
         },
-        cutout: '70%'
-      }
-    });
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const value = context.raw || 0;
+              return `${context.label}: ${value.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+              })}`;
+            }
+          }
+        }
+      },
+      layout: {
+        padding: {
+          top: 30,
+          bottom: 10
+        }
+      },
+      cutout: '70%'
+    }
+  });
+}
 
-    setTimeout(() => {
-      chart.data.datasets[0].data = [fixos, variaveis, sobra];
-      chart.update();
-    }, 50);
+// ===== Main =====
+function gerarGrafico() {
+  const salario = parseValor(document.getElementById('salario').value);
+  const fixos = parseValor(document.getElementById('fixos').value);
+  const variaveis = parseValor(document.getElementById('variaveis').value);
+
+  const totalGastos = fixos + variaveis;
+  const sobra = Math.max(salario - totalGastos, 0);
+
+  const sugestaoIdeal = salario * 0.2;
+  const sugestaoInvest = Math.min(sugestaoIdeal, sobra);
+
+  const comprometido = salario
+    ? ((totalGastos / salario) * 100).toFixed(0)
+    : 0;
+
+  let cor = '#34d399';
+  if (comprometido > 90) cor = '#f87171';
+  else if (comprometido > 80) cor = '#fbbf24';
+
+  criarCenterText(comprometido, cor);
+  criarSugestao(sugestaoInvest);
+
+  if (!chart) {
+    chart = criarGrafico();
   }
+
+  chart.data.datasets[0].data = [fixos, variaveis, sobra];
+  chart.update();
+}
